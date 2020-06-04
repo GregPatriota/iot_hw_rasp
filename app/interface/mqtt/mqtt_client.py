@@ -8,6 +8,7 @@ LOGGER = FormatLog()
 class MQTTInterface:
 
     def __init__(self, user: str, password: str, channel: str):
+        self.mqtt_c = mqtt.Client()
         self.mqtt_c.on_message = self.receive
         self.mqtt_c.on_connect = self.subscribe
         self.mqtt_c.on_publish = self.on_publish
@@ -35,7 +36,6 @@ class MQTTInterface:
 
     def connect(self, host: str, port: int):
         try:
-            self.mqtt_c = mqtt.Client()
             self.mqtt_c.username_pw_set(username=self.user, password=self.password)
             self.mqtt_c.connect(host=host, port=port)
         except Exception as err:
