@@ -1,3 +1,6 @@
+"""
+Module for MQTT super class
+"""
 import paho.mqtt.client as mqtt
 from app.utils.logger import FormatLog
 from app.utils.enumerators import LogTypes
@@ -6,14 +9,32 @@ LOGGER = FormatLog()
 
 
 class MQTTInterface:
+    """
+    MQTT super class.
+    The Subscriber implementation and Publisher implementation
+    will inherit from this class
+    """
 
     def __init__(self, user: str, password: str, channel: str):
+        """
+        Constructor
+
+        :param user: user for device on broker
+        :type user: str
+        :param password: secret for device on broker
+        :type password: str
+        :param channel: specific channel to communicate with topic on broker
+        :type channel: str
+        """
+        # Creating a client MQTT
         self.mqtt_c = mqtt.Client()
+        # Callbacks for client MQTT
         self.mqtt_c.on_message = self.receive
         self.mqtt_c.on_connect = self.subscribe
         self.mqtt_c.on_publish = self.on_publish
         self.mqtt_c.on_subscribe = self.on_subscribe
         self.mqtt_c.on_log = self.on_log
+        # Connection parameters
         self.user = user
         self.password = password
         self.channel = channel
@@ -35,6 +56,16 @@ class MQTTInterface:
                                    "message": str(msg.payload)})
 
     def connect(self, host: str, port: int):
+        """
+        First method must be called.
+        Here we will set the host address and the MQTT port.
+        In this case, I am using a Konker free account as my Broker
+
+        :param host: the host address for broker
+        :type host: str
+        :param port: MQTT port, the default port is 1883
+        :type port: int
+        """
         try:
             self.mqtt_c.username_pw_set(username=self.user, password=self.password)
             self.mqtt_c.connect(host=host, port=port)
@@ -43,8 +74,13 @@ class MQTTInterface:
                                        "message": err})
 
     def publisher(self, message: str):
+        """
+
+        """
         try:
-            self.mqtt_c.publish(payload=message)
+            topic_channel = self.channel.replace(' ', '')
+            topic = f"data/{self.user}/sub/{topic_channel}"
+            self.mqtt_c.publish(topic=topic, payload=message)
             LOGGER.format_log(content={"level": LogTypes.INFO.name, "tag": "[mqtt_client][publisher]",
                                        "message": "The package was sent..."})
         except Exception as err:
